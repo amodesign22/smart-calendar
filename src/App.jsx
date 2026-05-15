@@ -1,4 +1,53 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react"
+
+const MODEL = "claude-sonnet-4-20250514"
+const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY || ""
+
+function parseICSDate(dt) {
+  return new Date(dt).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"
+}
+
+function generateICS(events, attendees) {
+  const lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//SmartCalendar//EN","CALSCALE:GREGORIAN","METHOD:REQUEST"]
+  for (const ev of events) {
+    const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}@smartcal`
+    lines.push("BEGIN:VEVENT",`UID:${uid}`,`SUMMARY:${ev.title}`,`DTSTART:${parseICSDate(ev.start)}`,`DTEND:${parseICSDate(ev.end)}`)
+    if (ev.description) lines.push(`DESCRIPTION:${ev.description}`)
+    for (const email of attendees) if (email.trim()) lines.push(`ATTENDEE;RSVP=TRUE:mailto:${email.trim()}`)
+    lines.push("ORGANIZER:mailto:organizer@smartcal","END:VEVENT")
+  }
+  lines.push("END:VCALENDAR")
+  return lines.join("\r\n")
+}
+
+function downloadICS(events, attendees) {
+  const blob = new Blob([generateICS(events, attendees)], { type: "text/calendar;charset=utf-8" })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement("a")
+  a.href = url
+  a.download = "events.ics"
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function MarbleCanvas() {
+  const ref = useRef()
+  useEffect(() => {
+    const c = ref.current
+    const w = c.width = window.innerWidth
+    const h = c.height = window.innerHeight
+    const ctx = c.getContext("2d")
+    ctx.fillStyle = "#e8e8ea"
+    ctx.fillRect(0, 0, w, h)
+    const patches = [
+      [0.15,0.1,0.45,"rgba(210,210,215,0.55)"],
+      [0.6,0.3,0.38,"rgba(200,200,205,0.45)"],
+      [0.3,0.65,0.4,"rgba(205,205,210,0.4)"],
+      [0.75,0.7,0.35,"rgba(215,215,218,0.35)"],
+      [0.5,0.1,0.3,"rgba(195,195,200,0.3)"],
+    ]
+    for (const [cx,cy,r,color] of patches) {
+      consimport { useState, useEffect, useRef } from "react";
 
 const MODEL = "claude-sonnet-4-20250514";
 const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY || "";
