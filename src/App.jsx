@@ -47,7 +47,7 @@ function MarbleCanvas() {
       [0.5,0.1,0.3,"rgba(195,195,200,0.3)"],
     ]
     for (const [cx,cy,r,color] of patches) {
-      consimport { useState, useEffect, useRef } from "react";
+      import { useState, useEffect, useRef } from "react";
 
 const MODEL = "claude-sonnet-4-20250514";
 const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY || "";
