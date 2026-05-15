@@ -210,9 +210,9 @@ export default function App() {
 
         <div style={sectionStyle}>
           <div style={blackBarStyle}>1 ‧ 輸入事件描述（日期、時間、事件標題）</div>
-          <label style={labelStyle}>支援自然語言，例如「5/16 7"30-16:40 會考第一天」</label>
+          <label style={labelStyle}>支援自然語言，例如「5/16 7:30-16:40 會考第一天」</label>
           <textarea value={input} onChange={e => setInput(e.target.value)} rows={4}
-            placeholder="例如：5/16 7"30-16:40 會考第一天"
+            placeholder="例如：5/16 7:30-16:40 會考第一天"
             style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }} />
           {error && <p style={{ color: "#c0392b", fontSize: 13, margin: "6px 0 0" }}>{error}</p>}
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
