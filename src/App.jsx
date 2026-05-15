@@ -186,9 +186,6 @@ export default function App() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": API_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-allow-browser": "true"
         },
         body: JSON.stringify({ model: MODEL, max_tokens: 1000, messages: [{ role: "user", content:
           `Today is ${today}. Parse the following text and extract all calendar events. Return ONLY a valid JSON array, no markdown, no explanation. Each object: title (string), start (ISO datetime), end (ISO datetime, default +1hr), description (string).\n\nText:\n${input}` }] })
