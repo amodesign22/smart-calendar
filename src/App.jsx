@@ -195,7 +195,7 @@ export default function App() {
       const parsed = JSON.parse(text.replace(/```json|```/g, "").trim());
       if (Array.isArray(parsed) && parsed.length > 0) { setEvents(evs => [...evs, ...parsed]); setInput(""); }
       else setError("未能解析到事件，請重新描述。");
-    } catch { setError("解析失敗：" + e.message); }
+    } catch { setError("解析失敗：" + err.message); }
     setLoading(false);
   }
 
