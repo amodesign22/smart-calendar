@@ -215,13 +215,13 @@ export default function App() {
           <div style={blackBarStyle}>1 ‧ 輸入事件描述（日期、時間、事件標題）</div>
           <label style={labelStyle}>支援自然語言，例如「下週一下午3點開會、6月20日早上10點看診」</label>
           <textarea value={input} onChange={e => setInput(e.target.value)} rows={4}
-            placeholder="例如：明天下午2點專案會議、6月15日晚上7點家庭聚餐…"
+            placeholder="例如：5/16 7"30~16:40 會考第一天"
             style={{ ...inputStyle, resize: "vertical", lineHeight: 1.6 }} />
           {error && <p style={{ color: "#c0392b", fontSize: 13, margin: "6px 0 0" }}>{error}</p>}
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <button onClick={parseWithAI} disabled={loading || !input.trim()}
               style={{ flex: 1, padding: "9px 0", fontSize: 14, cursor: loading ? "wait" : "pointer", background: "#111", color: "#fff", border: "none", borderRadius: 8, fontWeight: 500, opacity: (!input.trim() || loading) ? 0.4 : 1 }}>
-              {loading ? "AI 解析中…" : "AI 解析事件"}
+              {loading ? "AI 解析中…" : "解析所有行程"}
             </button>
             <button onClick={addBlankEvent}
               style={{ padding: "9px 18px", fontSize: 14, cursor: "pointer", background: "#555", color: "#fff", border: "none", borderRadius: 8, fontWeight: 500 }}>
