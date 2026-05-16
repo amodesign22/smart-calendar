@@ -6,12 +6,11 @@ function getUserTimezone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone
 }
 
-function parseICSDate(dt, tz) {
+function parseICSDate(dt) {
   return new Date(dt).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"
 }
 
 function generateICS(events, attendees) {
-  const tz = getUserTimezone()
   const lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//SmartCalendar//EN","CALSCALE:GREGORIAN","METHOD:REQUEST"]
   for (const ev of events) {
     const uid = Date.now() + "-" + Math.random().toString(36).slice(2) + "@smartcal"
@@ -54,9 +53,9 @@ function downloadICS(events, attendees) {
 function addAllToGoogleCalendar(events, prefix) {
   for (let i = 0; i < events.length; i++) {
     const ev = events[i]
-    const title = encodeURIComponent(prefix + ev.title)
-    const start = ev.start.replace(/[-:]/g, "").replace("T", "T").slice(0, 15)
-    const end = ev.end.replace(/[-:]/g, "").replace("T", "T").slice(0, 15)
+    const title = encodeURIComponent(ev.title)
+    const start = ev.start.replace(/[-:]/g, "").slice(0, 15)
+    const end = ev.end.replace(/[-:]/g, "").slice(0, 15)
     const details = encodeURIComponent(ev.description || "")
     const tz = encodeURIComponent(getUserTimezone())
     const url = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + title + "&dates=" + start + "/" + end + "&details=" + details + "&ctz=" + tz
@@ -222,6 +221,7 @@ export default function App() {
     setLoading(true)
     setError("")
     const today = new Date().toISOString().slice(0, 10)
+    const currentYear = new Date().getFullYear()
     fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -230,7 +230,7 @@ export default function App() {
         max_tokens: 1000,
         messages: [{
           role: "user",
-          content: "Today is " + today + ". User timezone: " + timezone + ". Parse the following text and extract all calendar events. Return ONLY a valid JSON array, no markdown, no explanation. Each object: title (string), start (ISO datetime in local time), end (ISO datetime in local time, default +1hr), description (string).\n\nText:\n" + input
+          content: "Today is " + today + ". User timezone: " + timezone + ". Current year is " + currentYear + ". Parse the following text and extract all calendar events. When no year is specified, assume the current year (" + currentYear + "). If a later event has a month that is earlier than the previous event's month (e.g. previous was December, next is January), automatically advance the year by 1. Return ONLY a valid JSON array, no markdown, no explanation. Each object: title (string), start (ISO datetime in local time, must include full year), end (ISO datetime in local time, default +1hr, if event is all day set start to 00:00 and end to 23:59), description (string).\n\nText:\n" + input
         }]
       })
     })
@@ -277,6 +277,10 @@ export default function App() {
             placeholder="例如：5/16 7:30-16:40 會考第一天、6月15日晚上7點家庭聚餐..."
             style={Object.assign({}, inputStyle, {resize:"vertical", lineHeight:1.6})} />
           {error && <p style={{color:"#c0392b",fontSize:13,margin:"6px 0 0"}}>{error}</p>}
+          <p style={{fontSize:12,color:"#888",margin:"8px 0 0"}}>
+            ⚠️ 時間請使用「-」，勿使用全形「~」<br/>
+            ✅ 正確：5/16 7:30-16:30　❌ 錯誤：5/16 7:30~16:30
+          </p>
           <div style={{marginTop:12}}>
             <button onClick={parseWithAI} disabled={loading || !input.trim()}
               style={{width:"100%",padding:"9px 0",fontSize:14,cursor:loading?"wait":"pointer",background:"#111",color:"#fff",border:"none",borderRadius:8,fontWeight:500,opacity:(!input.trim()||loading)?0.4:1}}>
