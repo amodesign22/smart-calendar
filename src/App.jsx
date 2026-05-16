@@ -2,14 +2,24 @@ import { useState, useEffect, useRef } from "react"
 
 const MODEL = "claude-sonnet-4-20250514"
 
-function parseICSDate(dt) {
+function getUserTimezone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone
+}
+
+function parseICSDate(dt, tz) {
   return new Date(dt).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z"
 }
 
 function generateICS(events, attendees) {
+  const tz = getUserTimezone()
   const lines = ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//SmartCalendar//EN","CALSCALE:GREGORIAN","METHOD:REQUEST"]
   for (const ev of events) {
     const uid = Date.now() + "-" + Math.random().toString(36).slice(2) + "@smartcal"
+    const startDate = new Date(ev.start)
+    const reminderDate = new Date(startDate)
+    reminderDate.setDate(reminderDate.getDate() - 1)
+    reminderDate.setHours(9, 0, 0, 0)
+
     lines.push("BEGIN:VEVENT")
     lines.push("UID:" + uid)
     lines.push("SUMMARY:" + ev.title)
@@ -20,6 +30,11 @@ function generateICS(events, attendees) {
       if (email.trim()) lines.push("ATTENDEE;RSVP=TRUE:mailto:" + email.trim())
     }
     lines.push("ORGANIZER:mailto:organizer@smartcal")
+    lines.push("BEGIN:VALARM")
+    lines.push("TRIGGER;VALUE=DATE-TIME:" + parseICSDate(reminderDate.toISOString()))
+    lines.push("ACTION:DISPLAY")
+    lines.push("DESCRIPTION:提醒：" + ev.title)
+    lines.push("END:VALARM")
     lines.push("END:VEVENT")
   }
   lines.push("END:VCALENDAR")
@@ -34,6 +49,19 @@ function downloadICS(events, attendees) {
   a.download = "events.ics"
   a.click()
   URL.revokeObjectURL(url)
+}
+
+function addAllToGoogleCalendar(events, prefix) {
+  for (let i = 0; i < events.length; i++) {
+    const ev = events[i]
+    const title = encodeURIComponent(prefix + ev.title)
+    const start = ev.start.replace(/[-:]/g, "").replace("T", "T").slice(0, 15)
+    const end = ev.end.replace(/[-:]/g, "").replace("T", "T").slice(0, 15)
+    const details = encodeURIComponent(ev.description || "")
+    const tz = encodeURIComponent(getUserTimezone())
+    const url = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + title + "&dates=" + start + "/" + end + "&details=" + details + "&ctz=" + tz
+    setTimeout(function() { window.open(url, "_blank") }, i * 800)
+  }
 }
 
 function MarbleCanvas() {
@@ -122,6 +150,7 @@ const blackBarStyle = {
 }
 
 const accentCoral = "#D85A30"
+const accentBlue = "#1a73e8"
 
 function EmailTag(props) {
   return (
@@ -171,6 +200,7 @@ export default function App() {
   const [attendees, setAttendees] = useState([])
   const [emailInput, setEmailInput] = useState("")
   const [prefix, setPrefix] = useState("")
+  const [timezone] = useState(getUserTimezone())
 
   function addAttendee() {
     const e = emailInput.trim()
@@ -187,13 +217,6 @@ export default function App() {
     setEvents(function(evs){ return evs.filter(function(_, i){ return i !== idx }) })
   }
 
-  function addBlankEvent() {
-    const now = new Date()
-    function pad(n){ return String(n).padStart(2, "0") }
-    function fmt(d){ return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes()) }
-    setEvents(function(evs){ return evs.concat([{title:"新事件", start:fmt(now), end:fmt(new Date(now.getTime()+3600000)), description:""}]) })
-  }
-
   function parseWithAI() {
     if (!input.trim()) return
     setLoading(true)
@@ -207,7 +230,7 @@ export default function App() {
         max_tokens: 1000,
         messages: [{
           role: "user",
-          content: "Today is " + today + ". Parse the following text and extract all calendar events. Return ONLY a valid JSON array, no markdown, no explanation. Each object: title (string), start (ISO datetime), end (ISO datetime, default +1hr), description (string).\n\nText:\n" + input
+          content: "Today is " + today + ". User timezone: " + timezone + ". Parse the following text and extract all calendar events. Return ONLY a valid JSON array, no markdown, no explanation. Each object: title (string), start (ISO datetime in local time), end (ISO datetime in local time, default +1hr), description (string).\n\nText:\n" + input
         }]
       })
     })
@@ -242,28 +265,27 @@ export default function App() {
 
         <div style={{marginBottom:24}}>
           <h2 style={{fontSize:22,fontWeight:500,margin:"0 0 4px",color:"#111"}}>智慧行事曆建立工具</h2>
-          <p style={{fontSize:14,color:"#555",margin:0}}>輸入事件、設定共用對象，匯出 .ics 直接加入行事曆</p>
+          <p style={{fontSize:14,color:"#555",margin:"0 0 2px"}}>輸入事件、設定共用對象，匯出 .ics 直接加入行事曆</p>
+          <p style={{fontSize:12,color:"#888",margin:0}}>目前時區：{timezone}</p>
         </div>
 
+        {/* Step 1 */}
         <div style={sectionStyle}>
           <div style={blackBarStyle}>1 ‧ 輸入事件描述（日期、時間、事件標題）</div>
-          <label style={labelStyle}>支援自然語言，例如「下週一下午3點開會、6月20日早上10點看診」</label>
+          <label style={labelStyle}>支援自然語言，例如「5/16 7:30-16:40 會考第一天、6月20日早上10點看診」</label>
           <textarea value={input} onChange={function(e){ setInput(e.target.value) }} rows={4}
             placeholder="例如：5/16 7:30-16:40 會考第一天、6月15日晚上7點家庭聚餐..."
             style={Object.assign({}, inputStyle, {resize:"vertical", lineHeight:1.6})} />
           {error && <p style={{color:"#c0392b",fontSize:13,margin:"6px 0 0"}}>{error}</p>}
-          <div style={{display:"flex",gap:8,marginTop:12}}>
+          <div style={{marginTop:12}}>
             <button onClick={parseWithAI} disabled={loading || !input.trim()}
-              style={{flex:1,padding:"9px 0",fontSize:14,cursor:loading?"wait":"pointer",background:"#111",color:"#fff",border:"none",borderRadius:8,fontWeight:500,opacity:(!input.trim()||loading)?0.4:1}}>
-              {loading ? "AI 解析中..." : "AI 解析事件"}
-            </button>
-            <button onClick={addBlankEvent}
-              style={{padding:"9px 18px",fontSize:14,cursor:"pointer",background:"#555",color:"#fff",border:"none",borderRadius:8,fontWeight:500}}>
-              手動新增
+              style={{width:"100%",padding:"9px 0",fontSize:14,cursor:loading?"wait":"pointer",background:"#111",color:"#fff",border:"none",borderRadius:8,fontWeight:500,opacity:(!input.trim()||loading)?0.4:1}}>
+              {loading ? "解析中..." : "解析所有事件"}
             </button>
           </div>
         </div>
 
+        {/* Step 2 */}
         <div style={sectionStyle}>
           <div style={blackBarStyle}>2 ‧ 設定共用對象</div>
           <label style={labelStyle}>以下 Email 將套用至所有事件的邀請名單</label>
@@ -285,10 +307,11 @@ export default function App() {
           </div>
         </div>
 
+        {/* Step 3 */}
         <div style={sectionStyle}>
-          <div style={blackBarStyle}>3 ‧ 所有事件標題前面統一新增的文字，例如【IDS】</div>
+          <div style={blackBarStyle}>3 ‧ 所有事件標題前面統一新增的文字，例如【XX培訓班】【XX作品班】【XX比賽團】</div>
           <input value={prefix} onChange={function(e){ setPrefix(e.target.value) }}
-            placeholder="例如：【IDS】、【公司】..." style={inputStyle} />
+            placeholder="例如：【XX培訓班】、【公司】..." style={inputStyle} />
           {prefix && events.length > 0 && (
             <p style={{fontSize:13,color:"#666",margin:"8px 0 0"}}>
               預覽：<span style={{color:"#111",fontWeight:500}}>{prefix}{events[0] && events[0].title}</span>
@@ -296,27 +319,39 @@ export default function App() {
           )}
         </div>
 
+        {/* Step 4 */}
         {events.length > 0 && (
           <div style={sectionStyle}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-              <div style={Object.assign({}, blackBarStyle, {background:accentCoral,marginBottom:0,flex:1,marginRight:10})}>
-                4 ‧ 確認事件清單
-                <span style={{marginLeft:8,fontSize:12,background:"rgba(255,255,255,0.25)",borderRadius:99,padding:"1px 8px"}}>{events.length} 筆</span>
-              </div>
-              <button onClick={function(){ downloadICS(events.map(function(ev){ return Object.assign({}, ev, {title:prefix+ev.title}) }), attendees) }}
-                style={{padding:"8px 18px",fontSize:13,cursor:"pointer",background:accentCoral,color:"#fff",border:"none",borderRadius:8,fontWeight:500,whiteSpace:"nowrap"}}>
-                匯出 .ics
-              </button>
+            <div style={Object.assign({}, blackBarStyle, {background:accentCoral})}>
+              4 ‧ 確認事件清單
+              <span style={{marginLeft:8,fontSize:12,background:"rgba(255,255,255,0.25)",borderRadius:99,padding:"1px 8px"}}>{events.length} 筆</span>
             </div>
+
             {events.map(function(ev, i){
               return <EventCard key={i} ev={ev} idx={i} onChange={updateEvent} onRemove={removeEvent} prefix={prefix} />
             })}
-            <div style={{display:"flex",justifyContent:"flex-end",marginTop:8}}>
+
+            {/* 加入 Google 日曆 */}
+            <button
+              onClick={function(){ addAllToGoogleCalendar(events.map(function(ev){ return Object.assign({}, ev, {title:prefix+ev.title}) }), prefix) }}
+              style={{width:"100%",padding:"10px 0",fontSize:14,cursor:"pointer",background:accentBlue,color:"#fff",border:"none",borderRadius:8,fontWeight:500,marginTop:8,marginBottom:10}}>
+              加入 Google 日曆（共 {events.length} 筆）
+            </button>
+
+            {/* 提醒備註 */}
+            <div style={{background:"rgba(255,255,255,0.5)",borderRadius:8,padding:"10px 14px",marginBottom:10}}>
+              <p style={{fontSize:13,color:"#555",margin:"0 0 8px"}}>
+                如需加入提醒設定，請下載 .ics 檔匯入日曆
+              </p>
               <button onClick={function(){ downloadICS(events.map(function(ev){ return Object.assign({}, ev, {title:prefix+ev.title}) }), attendees) }}
-                style={{fontSize:14,padding:"10px 32px",cursor:"pointer",background:accentCoral,color:"#fff",border:"none",borderRadius:8,fontWeight:500}}>
-                匯出 .ics 行事曆
+                style={{padding:"7px 16px",fontSize:13,cursor:"pointer",background:"#555",color:"#fff",border:"none",borderRadius:8,fontWeight:500}}>
+                下載 .ics 檔
               </button>
+              <p style={{fontSize:12,color:"#999",margin:"8px 0 0"}}>
+                使用自動加入 Google 日曆是沒有提醒功能的哦
+              </p>
             </div>
+
           </div>
         )}
 
