@@ -239,7 +239,7 @@ export default function App() {
         max_tokens: 1000,
         messages: [{
           role: "user",
-          content: "Today is " + today + ". User timezone: " + timezone + ". Current year is " + currentYear + ". Parse the following text and extract all calendar events. When no year is specified, assume the current year (" + currentYear + "). If a later event has a month that is earlier than the previous event's month (e.g. previous was December, next is January), automatically advance the year by 1. Return ONLY a valid JSON array, no markdown, no explanation. Each object: title (string), start (ISO datetime in local time, must include full year), end (ISO datetime in local time, default +1hr, if event is all day set start to 00:00 and end to 23:59), description (string).\n\nText:\n" + input
+      content: "Today is " + today + ". User timezone: " + timezone + ". Current year is " + currentYear + ". Parse the following text and extract all calendar events. When no year is specified, assume the current year (" + currentYear + "). If a later event has a month that is earlier than the previous event's month (e.g. previous was December, next is January), automatically advance the year by 1. The time range separator can be any of these: -, –, —, ~, ～, to, 到, 至 — treat them all as time range separators. Return ONLY a valid JSON array, no markdown, no explanation. Each object: title (string), start (ISO datetime in local time, must include full year e.g. 2026-05-16T07:30), end (ISO datetime in local time, default +1hr, if event is all day set start to T00:00 and end to T23:59), description (string).\n\nText:\n" + input
         }]
       })
     })
@@ -254,7 +254,13 @@ export default function App() {
       const clean = text.replace(/```json|```/g, "").trim()
       const parsed = JSON.parse(clean)
       if (Array.isArray(parsed) && parsed.length > 0) {
-        setEvents(function(evs){ return evs.concat(parsed) })
+        const fixed = parsed.map(function(ev) {
+          return Object.assign({}, ev, {
+            start: fixDatetime(ev.start),
+            end: fixDatetime(ev.end)
+          })
+        })
+        setEvents(function(evs){ return evs.concat(fixed) })
         setInput("")
       } else {
         setError("未能解析到事件，請重新描述。")
