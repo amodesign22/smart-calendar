@@ -255,6 +255,14 @@ export default function App() {
             ⚠️ 時間請使用「-」，全形「~」也可辨識<br/>
             ✅ 正確：5/16 7:30-16:30　或　5/16 7:30~16:30
           </p>
+
+          {/* 前綴設定移到這裡 */}
+          <div style={{marginTop:16,paddingTop:16,borderTop:"1px solid rgba(255,255,255,0.08)"}}>
+            <label style={labelStyle}>所有事件標題前面統一新增的文字，例如【XX培訓班】【XX作品班】</label>
+            <input value={prefix} onChange={function(e){ setPrefix(e.target.value) }}
+              placeholder="例如：【XX培訓班】、【公司】（選填）" style={glassInput} />
+          </div>
+
           <div style={{marginTop:12}}>
             <button onClick={parseWithAI} disabled={loading || !input.trim()} style={Object.assign({}, glassBtn, {opacity:(!input.trim()||loading)?0.35:1, cursor:loading?"wait":"pointer"})}>
               {loading ? "解析中..." : "解析所有事件"}
@@ -284,22 +292,10 @@ export default function App() {
         </div>
 
         {/* Step 3 */}
-        <div style={glassSection}>
-          <div style={glassBar}><span style={{marginRight:8,opacity:0.7}}>03</span>所有事件標題前面統一新增的文字，例如【XX培訓班】</div>
-          <input value={prefix} onChange={function(e){ setPrefix(e.target.value) }}
-            placeholder="例如：【XX培訓班】、【公司】..." style={glassInput} />
-          {prefix && events.length > 0 && (
-            <p style={{fontSize:12,color:"rgba(255,255,255,0.45)",margin:"8px 0 0"}}>
-              預覽：<span style={{color:"#fff",fontWeight:500}}>{prefix}{events[0]&&events[0].title}</span>
-            </p>
-          )}
-        </div>
-
-        {/* Step 4 */}
         {events.length > 0 && (
           <div style={glassSection}>
             <div style={Object.assign({}, glassBar, {background:"linear-gradient(135deg,rgba(220,80,40,0.5),rgba(180,40,20,0.3))",border:"1px solid rgba(255,120,80,0.3)"})}>
-              <span style={{marginRight:8,opacity:0.7}}>04</span>確認事件清單
+              <span style={{marginRight:8,opacity:0.7}}>03</span>確認事件清單
               <span style={{marginLeft:8,fontSize:12,background:"rgba(255,255,255,0.15)",borderRadius:99,padding:"1px 8px"}}>{events.length} 筆</span>
             </div>
 
@@ -307,9 +303,16 @@ export default function App() {
               return <EventCard key={i} ev={ev} idx={i} onChange={updateEvent} onRemove={removeEvent} prefix={prefix} />
             })}
 
+            {prefix && <p style={{fontSize:12,color:"rgba(255,255,255,0.45)",margin:"0 0 10px"}}>
+              前綴預覽：<span style={{color:"#fff",fontWeight:500}}>{prefix}{events[0]&&events[0].title}</span>
+            </p>}
+
             <button onClick={function(){ addAllToGoogleCalendar(events.map(function(ev){ return Object.assign({},ev,{title:prefix+ev.title}) }),prefix) }} style={blueBtn}>
               加入 Google 日曆（共 {events.length} 筆）
             </button>
+            <p style={{fontSize:11,color:"rgba(255,255,255,0.35)",margin:"-6px 0 10px",textAlign:"center"}}>
+              將依序開啟每筆事件，請逐一點擊「儲存」完成新增
+            </p>
 
             <div style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"10px 14px"}}>
               <p style={{fontSize:13,color:"rgba(255,255,255,0.55)",margin:"0 0 8px"}}>如需加入提醒設定，請下載 .ics 檔匯入日曆</p>
@@ -329,4 +332,4 @@ export default function App() {
       `}</style>
     </div>
   )
-} 
+}
