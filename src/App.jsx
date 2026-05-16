@@ -216,6 +216,15 @@ export default function App() {
     setEvents(function(evs){ return evs.filter(function(_, i){ return i !== idx }) })
   }
 
+  function fixDatetime(str) {
+    if (!str) return ""
+    // 確保格式為 YYYY-MM-DDTHH:MM
+    const d = new Date(str)
+    if (isNaN(d.getTime())) return ""
+    const pad = function(n){ return String(n).padStart(2, "0") }
+    return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes())
+  }
+
   function parseWithAI() {
     if (!input.trim()) return
     setLoading(true)
