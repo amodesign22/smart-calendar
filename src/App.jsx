@@ -220,7 +220,7 @@ export default function App() {
       <div style={{position:"relative",zIndex:1,maxWidth:620,margin:"0 auto",padding:"2rem 1rem"}}>
 
         <div style={{marginBottom:28,textAlign:"center"}}>
-          <h2 style={{fontSize:24,fontWeight:600,margin:"0 0 6px",color:"#fff",letterSpacing:"0.02em"}}>智慧行事曆建立工具</h2>
+          <h2 style={{fontSize:24,fontWeight:600,margin:"0 0 6px",color:"#fff",letterSpacing:"0.02em"}}>多比一次匯入行事曆工具</h2>
           <p style={{fontSize:13,color:"rgba(255,255,255,0.45)",margin:"0 0 2px"}}>輸入事件、設定共用對象，匯出 .ics 直接加入行事曆</p>
           <p style={{fontSize:11,color:"rgba(255,255,255,0.3)",margin:0}}>時區：{timezone}</p>
         </div>
