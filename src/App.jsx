@@ -220,8 +220,8 @@ export default function App() {
       <div style={{position:"relative",zIndex:1,maxWidth:620,margin:"0 auto",padding:"2rem 1rem"}}>
 
         <div style={{marginBottom:28,textAlign:"center"}}>
-          <h2 style={{fontSize:24,fontWeight:600,margin:"0 0 6px",color:"#fff",letterSpacing:"0.02em"}}>智慧行事曆建立工具</h2>
-          <p style={{fontSize:13,color:"rgba(255,255,255,0.45)",margin:"0 0 2px"}}>輸入事件、設定共用對象，匯出 .ics 直接加入行事曆</p>
+          <h2 style={{fontSize:24,fontWeight:600,margin:"0 0 6px",color:"#fff",letterSpacing:"0.02em"}}>多筆行程一次匯入行事曆工具</h2>
+          <p style={{fontSize:13,color:"rgba(255,255,255,0.45)",margin:"0 0 2px"}}>輸入行程、設定共用對象，匯出 .ics 直接加入行事曆</p>
           <p style={{fontSize:11,color:"rgba(255,255,255,0.3)",margin:0}}>時區：{timezone}</p>
         </div>
 
@@ -296,7 +296,6 @@ export default function App() {
                 下載 .ics 檔
               </button>
               <p style={{fontSize:11,color:"rgba(255,255,255,0.4)",margin:"10px 0 0",lineHeight:1.6}}>
-                📅 .ics 檔已內含提醒設定：事件前一天早上 9:00 自動提醒<br/>
                 下載後匯入 Apple 日曆、Samsung 日曆或 Google 日曆即可
               </p>
             </div>
