@@ -192,7 +192,7 @@ export default function App() {
       body: JSON.stringify({
         model: MODEL, max_tokens: 1000,
         messages: [{ role: "user", content:
-          "Today is " + today + ". User timezone: " + timezone + ". Current year is " + currentYear + ". Parse the following text and extract all calendar events. When no year is specified, assume the current year (" + currentYear + "). If a later event has a month earlier than the previous event's month, advance year by 1. Time range separators can be: -, \u2013, \u2014, ~, \uff5e, to, \u5230, \u81f3. Return ONLY a valid JSON array, no markdown. Each object: title (string), start (ISO datetime e.g. 2026-05-16T07:30), end (ISO datetime, default +1hr, all day: T00:00/T23:59), description (string).\n\nText:\n" + input
+          "Today is " + today + ". User timezone: " + timezone + ". Current year is " + currentYear + ". Parse the following text and extract all calendar events. When no year is specified, assume the current year (" + currentYear + "). If a later event has a month earlier than the previous event's month, advance year by 1. Time range separators can be: -, \u2013, \u2014, ~, \uff5e, to, \u5230, \u81f3. If no time is specified for an event, treat it as an all-day event (start: T00:00, end: T23:59). Return ONLY a valid JSON array, no markdown. Each object: title (string), start (ISO datetime e.g. 2026-07-05T00:00), end (ISO datetime, default +1hr if time given, T23:59 if all-day), description (string).\n\nText:\n" + input
         }]
       })
     })
@@ -220,7 +220,7 @@ export default function App() {
       <div style={{position:"relative",zIndex:1,maxWidth:620,margin:"0 auto",padding:"2rem 1rem"}}>
 
         <div style={{marginBottom:28,textAlign:"center"}}>
-          <h2 style={{fontSize:24,fontWeight:600,margin:"0 0 6px",color:"#fff",letterSpacing:"0.02em"}}>多筆一次匯入行事曆工具</h2>
+          <h2 style={{fontSize:24,fontWeight:600,margin:"0 0 6px",color:"#fff",letterSpacing:"0.02em"}}>智慧行事曆建立工具</h2>
           <p style={{fontSize:13,color:"rgba(255,255,255,0.45)",margin:"0 0 2px"}}>輸入事件、設定共用對象，匯出 .ics 直接加入行事曆</p>
           <p style={{fontSize:11,color:"rgba(255,255,255,0.3)",margin:0}}>時區：{timezone}</p>
         </div>
